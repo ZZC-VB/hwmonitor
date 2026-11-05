@@ -45,6 +45,8 @@ CPU 温度要读 MSR，必须有 ring0 驱动。LHM 0.9.5 之后改用签名驱�
 
 ## 快速开始
 
+> **只想用，不想编译？** 直接下 [Releases](https://github.com/ZZC-VB/hwmonitor/releases) 里的 `HwMonitor-2.5-win-x64.zip`，解压后双击 `HwMonitor.exe` 即可，无需安装 .NET 或任何编译环境。
+
 ### 环境
 
 - Windows 10 / 11 x64
