@@ -54,7 +54,10 @@ Friend NotInheritable Class TrayApp
         menu.Items.Add(exitItem)
         UpdateAddressText()
 
-        _icon = MakeIcon(_hIcon)
+        ' 托盘用和 exe 同一个图标（app.ico 已作为程序集资源嵌入），
+        ' 实在取不到才回退到代码绘制的那版
+        _icon = LoadAppIcon()
+        If _icon Is Nothing Then _icon = MakeIcon(_hIcon)
         _tray = New NotifyIcon() With {
             .Icon = _icon,
             .Text = "硬件监控",
@@ -241,7 +244,30 @@ Friend NotInheritable Class TrayApp
         Return If(v.HasValue, v.Value.ToString(f, Globalization.CultureInfo.InvariantCulture), "--")
     End Function
 
-    ''' <summary>代码绘制的绿色心电图标，无资源文件。</summary>
+    ''' <summary>
+    ''' 从程序集嵌入资源里取 app.ico，按系统托盘尺寸选帧（通常 16x16）。
+    ''' 比 ExtractAssociatedIcon 准——后者只返回 32x32 位图，缩到 16 会糊。
+    ''' 取不到返回 Nothing，由调用方回退到代码绘制。
+    ''' </summary>
+    Private Shared Function LoadAppIcon() As Icon
+        Try
+            Dim asm As System.Reflection.Assembly = System.Reflection.Assembly.GetExecutingAssembly()
+            Using st As Stream = asm.GetManifestResourceStream("HwMonitor.app.ico")
+                If st Is Nothing Then Return Nothing
+                Using raw As New MemoryStream()
+                    st.CopyTo(raw)
+                    raw.Position = 0
+                    Using tmp As New Icon(raw, SystemInformation.SmallIconSize)
+                        Return CType(tmp.Clone(), Icon)   ' Clone 后可以安全关闭流
+                    End Using
+                End Using
+            End Using
+        Catch
+            Return Nothing
+        End Try
+    End Function
+
+    ''' <summary>代码绘制的绿色心电图标，无资源文件。仅在嵌入图标取不到时兜底。</summary>
     Private Shared Function MakeIcon(ByRef hIcon As IntPtr) As Icon
         Using bmp As New Bitmap(32, 32)
             Using g As Graphics = Graphics.FromImage(bmp)

@@ -2,6 +2,8 @@
 -platform:x64
 -out:bin\Release\HwMonitor.exe
 -win32manifest:app.manifest
+-win32icon:app.ico
+-resource:app.ico,HwMonitor.app.ico
 -optionstrict+
 -optionexplicit+
 -optioninfer+
