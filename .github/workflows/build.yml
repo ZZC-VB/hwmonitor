@@ -15,14 +15,48 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v7
 
-      # libs/ 在仓库里是空的（第三方二进制不入库），CI 自己拉一份
+      # libs/ 在仓库里是空的（第三方二进制不入库），CI 自己拉一份。
+      # 缓存住这个 6.4 MB 的包：既快，也能避开 release CDN 偶发的 504。
+      - name: 缓存 LHM 依赖包
+        uses: actions/cache@v6
+        id: lhm
+        with:
+          path: lhm.zip
+          key: lhm-0.9.6-net472
+
       - name: 准备第三方依赖（LibreHardwareMonitor 0.9.6）
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $url = 'https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/download/v0.9.6/LibreHardwareMonitor.zip'
-          Invoke-WebRequest -Uri $url -OutFile lhm.zip
-          Expand-Archive lhm.zip -DestinationPath lhm-tmp -Force
+
+          function Test-Zip([string]$p) {
+            if (-not (Test-Path $p)) { return $false }
+            return (Get-Item $p).Length -gt 5MB
+          }
+
+          if (Test-Zip 'lhm.zip') {
+            Write-Host '命中缓存，跳过下载'
+          } else {
+            $url = 'https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/download/v0.9.6/LibreHardwareMonitor.zip'
+            $done = $false
+            for ($i = 1; $i -le 3; $i++) {
+              try {
+                Write-Host "下载 LHM，第 $i 次尝试…"
+                Invoke-WebRequest -Uri $url -OutFile 'lhm.zip' -TimeoutSec 180
+                if (-not (Test-Zip 'lhm.zip')) { throw '下载到的文件大小异常' }
+                $done = $true
+                break
+              } catch {
+                Write-Host "失败：$($_.Exception.Message)"
+                Remove-Item 'lhm.zip' -ErrorAction SilentlyContinue
+                if ($i -eq 3) { throw 'LibreHardwareMonitor 下载失败（已重试 3 次）' }
+                Start-Sleep -Seconds (5 * $i)
+              }
+            }
+            if (-not $done) { throw '下载未完成' }
+          }
+
+          Expand-Archive 'lhm.zip' -DestinationPath lhm-tmp -Force
           # LHM 的 DLL 全在压缩包根目录；gui 依赖（OxyPlot / Aga.Controls 等）复制过去也无害
           Get-ChildItem lhm-tmp -Filter *.dll | Copy-Item -Destination libs -Force
           Copy-Item lhm-tmp\LibreHardwareMonitorLib.xml libs\ -ErrorAction SilentlyContinue
