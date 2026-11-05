@@ -1,0 +1,19 @@
+# 第三方二进制依赖：体积大、许可各异，不入库，获取方式见 libs/README.md、tools/README.md
+libs/*.dll
+libs/*.xml
+tools/*.exe
+
+# 构建产物
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.vbproj.user
+
+# 系统
+Thumbs.db
+Desktop.ini
+.DS_Store

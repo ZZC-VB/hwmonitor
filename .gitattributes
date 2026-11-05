@@ -1,0 +1,13 @@
+* text=auto
+
+# Windows 批处理与 VB 源码保持 CRLF
+*.bat text eol=crlf
+*.vb text eol=crlf
+*.vbproj text eol=crlf
+*.rsp text eol=crlf
+*.manifest text eol=crlf
+
+# 二进制
+*.dll binary
+*.exe binary
+*.ico binary
