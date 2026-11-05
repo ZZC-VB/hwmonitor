@@ -4,11 +4,12 @@
 
 ## 获取方式
 
-1. 打开 <https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases>，找到 **0.9.6**，下载 `LibreHardwareMonitor-net472.zip`
-2. 解压，把其中所有 `.dll` 复制到本目录
+1. 打开 <https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases>，找到 **0.9.6**，下载 `LibreHardwareMonitor.zip`（6.4 MB）
+   - 注意：同一个 Release 下还有一个 `LibreHardwareMonitor.NET.10.zip`，那是 .NET 10 版本，本项目用不了，**要下不带 .NET.10 的那个**
+2. 解压，把其中根目录的 `.dll` 复制到本目录（语言子目录 `zh-CN/`、`de/` 等不用管）
 3. 回到仓库根目录执行 `build.bat`
 
-LHM 的压缩包里会多出几个本程序用不到的文件（`LibreHardwareMonitor.exe`、语言资源目录等），留着不影响编译，删掉也没关系。
+LHM 的压缩包里还会带 `LibreHardwareMonitor.exe`、`OxyPlot.dll`、`Aga.Controls.dll`、`Microsoft.Win32.TaskScheduler.dll`，这些是它自己 GUI 用的，本程序不需要，复制过来也不影响编译。
 
 ## 编译时会被引用的
 

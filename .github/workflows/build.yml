@@ -1,0 +1,68 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: 编译 PC 端
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # libs/ 在仓库里是空的（第三方二进制不入库），CI 自己拉一份
+      - name: 准备第三方依赖（LibreHardwareMonitor 0.9.6）
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = 'https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/download/v0.9.6/LibreHardwareMonitor.zip'
+          Invoke-WebRequest -Uri $url -OutFile lhm.zip
+          Expand-Archive lhm.zip -DestinationPath lhm-tmp -Force
+          # LHM 的 DLL 全在压缩包根目录；gui 依赖（OxyPlot / Aga.Controls 等）复制过去也无害
+          Get-ChildItem lhm-tmp -Filter *.dll | Copy-Item -Destination libs -Force
+          Copy-Item lhm-tmp\LibreHardwareMonitorLib.xml libs\ -ErrorAction SilentlyContinue
+          if (-not (Test-Path libs\LibreHardwareMonitorLib.dll)) {
+            throw '依赖准备失败：LibreHardwareMonitorLib.dll 没解出来'
+          }
+          "libs 下共 " + (Get-ChildItem libs -Filter *.dll).Count + " 个 DLL"
+
+      - name: 打印编译器版本
+        shell: cmd
+        run: |
+          if not exist "%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\vbc.exe" (
+            echo [FAIL] 找不到 vbc.exe
+            exit /b 1
+          )
+          "%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\vbc.exe" /help >nul && echo vbc 可用
+
+      # 跑仓库自带的构建脚本，等于同时验证「别人 clone 下来照 README 能编过」
+      - name: 编译（build.bat）
+        shell: cmd
+        run: build.bat
+
+      - name: 校验产物
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = 'bin\Release\HwMonitor.exe'
+          if (-not (Test-Path $exe)) { throw '没有生成 HwMonitor.exe' }
+          if (-not (Test-Path 'bin\Release\LibreHardwareMonitorLib.dll')) { throw 'DLL 没有随包复制到 bin\Release' }
+
+          $vi = (Get-Item $exe).VersionInfo
+          $vi | Select-Object FileVersion, ProductVersion, FileDescription | Format-List
+          if ($vi.FileVersion -ne '2.5.0.0') { throw "文件版本不对：$($vi.FileVersion)" }
+
+          "exe 大小 " + [math]::Round((Get-Item $exe).Length / 1KB) + " KB"
+          "bin\Release 共 " + (Get-ChildItem bin\Release).Count + " 个文件"
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: HwMonitor-2.5
+          path: bin/Release/
+          retention-days: 7

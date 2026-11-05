@@ -5,6 +5,7 @@
 -optionstrict+
 -optionexplicit+
 -optioninfer+
+-codepage:65001
 -rootnamespace:HwMonitor
 -main:HwMonitor.Program
 -imports:System,System.Collections.Generic,System.Linq,System.Diagnostics,Microsoft.VisualBasic

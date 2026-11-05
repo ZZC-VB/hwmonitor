@@ -1,5 +1,8 @@
 # HwMonitor · Windows 硬件监控采集端
 
+[![build](https://github.com/ZZC-VB/hwmonitor/actions/workflows/build.yml/badge.svg)](https://github.com/ZZC-VB/hwmonitor/actions/workflows/build.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 一个**只有托盘图标**的 Windows 硬件数据采集端。把 CPU、显卡、内存、硬盘、网卡的实时状态，通过局域网 TCP 持续推给手机或任何你写的客户端。
 
 > A headless Windows hardware monitor that streams CPU / GPU / memory / disk / network metrics over LAN as NDJSON.
@@ -52,7 +55,7 @@ CPU 温度要读 MSR，必须有 ring0 驱动。LHM 0.9.5 之后改用签名驱�
 
 `libs/` 里的 DLL 全部是第三方组件，按各自许可分发，因此没有入库。获取方式：
 
-1. 打开 LibreHardwareMonitor 的 Releases 页面，下载 **0.9.6** 的 `LibreHardwareMonitor-net472.zip`
+1. 打开 LibreHardwareMonitor 的 Releases 页面，下载 **0.9.6** 的 `LibreHardwareMonitor.zip`（6.4 MB，这是 .NET Framework 4.7.2 版本；另一个 `LibreHardwareMonitor.NET.10.zip` 是 .NET 10 版本，不要用）
 2. 解压，把其中所有 `.dll` 复制到本仓库的 `libs/` 目录
 3. （可选）想让 CPU 温度可用，把 [PawnIO](https://github.com/namazso/PawnIO) 的 `PawnIO_setup.exe` 放进 `tools/`
 
@@ -65,6 +68,8 @@ build.bat
 ```
 
 产物在 `bin\Release\`，需要连同 `libs\*.dll` 一起分发（`build.bat` 会自动复制）。也可以直接用 Visual Studio 2019+ 打开 `HwMonitor.vbproj`。
+
+不想在本地准备依赖也可以：每次提交到 `main`，GitHub Actions 会自动下载 LHM 依赖、编译并校验文件版本，编译好的整包在 [Actions](https://github.com/ZZC-VB/hwmonitor/actions/workflows/build.yml) 页面的 Artifacts 里，保留 7 天。
 
 ### 3. 运行
 
